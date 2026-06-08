@@ -1,37 +1,32 @@
 import 'dotenv/config';
-import { writeFileSync, mkdirSync, readFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { generatePosts } from './generate.js';
 import { sendEmail } from './send-email.js';
+import { getHolidays } from './holidays.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 
 function todayKST() {
-  return new Date().toLocaleDateString('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-  }).replace(/\. /g, '-').replace('.', '');
-}
-
-function isHoliday(dateStr) {
-  const { holidays } = JSON.parse(readFileSync(join(ROOT, 'holidays.json'), 'utf-8'));
-  return holidays.includes(dateStr);
+  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
 }
 
 function saveLog(data) {
   const dir = join(ROOT, 'output');
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, `${todayKST()}.json`), JSON.stringify(data, null, 2), 'utf-8');
-  console.log(`로그 저장 → output/${todayKST()}.json`);
+  const today = todayKST();
+  writeFileSync(join(dir, `${today}.json`), JSON.stringify(data, null, 2), 'utf-8');
+  console.log(`로그 저장 → output/${today}.json`);
 }
 
 async function run() {
   const today = todayKST();
   console.log(`[${today}] 테리크 스레드 데일리 시작`);
 
-  if (isHoliday(today)) {
+  const holidays = await getHolidays();
+  if (holidays.includes(today)) {
     console.log(`오늘(${today})은 공휴일입니다. 발송을 건너뜁니다.`);
     process.exit(0);
   }
