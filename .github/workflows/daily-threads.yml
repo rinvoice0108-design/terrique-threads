@@ -1,0 +1,33 @@
+name: 테리크 스레드 데일리
+
+on:
+  schedule:
+    - cron: '0 23 * * *'  # 매일 오전 8시 KST (UTC 23:00 전날)
+  workflow_dispatch:        # 수동 실행 버튼도 활성화
+
+jobs:
+  generate-and-send:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 패키지 설치
+        run: npm ci
+
+      - name: 스레드 포스트 생성 및 이메일 발송
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          BRAND_NAME: 테리크
+          POST_COUNT: 3
+        run: node scripts/daily.js
