@@ -2,7 +2,7 @@ name: 테리크 스레드 데일리
 
 on:
   schedule:
-    - cron: '7 22 * * 0-4'  # 평일 오전 7시 KST (UTC 22:07, 월~금)
+    - cron: '19 19 * * 0-4'  # 평일 오전 4시 KST (UTC 19:19, 월~금)
   workflow_dispatch:        # 수동 실행 버튼도 활성화
 
 jobs:
