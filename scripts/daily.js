@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { generatePosts } from './generate.js';
@@ -24,6 +24,12 @@ function saveLog(data) {
 async function run() {
   const today = todayKST();
   console.log(`[${today}] 테리크 스레드 데일리 시작`);
+
+  const logFile = join(ROOT, 'output', `${today}.json`);
+  if (existsSync(logFile)) {
+    console.log(`오늘(${today}) 이미 발송 완료. 건너뜁니다.`);
+    process.exit(0);
+  }
 
   const holidays = await getHolidays();
   if (holidays.includes(today)) {
