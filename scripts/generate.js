@@ -90,14 +90,27 @@ ${structures}
   ]
 }`;
 
-  const res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.85, maxOutputTokens: 3000 },
-    }),
+  const body = JSON.stringify({
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.85, maxOutputTokens: 3000 },
   });
+
+  const MAX_RETRIES = 4;
+  const RETRY_DELAYS = [5000, 15000, 30000, 60000];
+  let res;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+    if (res.ok || res.status !== 503) break;
+    if (attempt < MAX_RETRIES) {
+      const delay = RETRY_DELAYS[attempt];
+      console.log(`Gemini 503 — ${delay / 1000}초 후 재시도 (${attempt + 1}/${MAX_RETRIES})...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
 
   if (!res.ok) {
     const err = await res.text();
